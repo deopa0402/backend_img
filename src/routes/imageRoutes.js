@@ -15,7 +15,7 @@ const upload = multer({
 });
 
 // 이미지 업로드
-router.post('/upload', upload.single('image'), ImageController.uploadImage);
+router.post('/upload', upload.single('file'), ImageController.uploadImage);
 
 // 단축 URL 생성
 router.post('/shorten', ImageController.createShortUrl);
