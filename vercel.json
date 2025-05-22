@@ -11,5 +11,10 @@
       "src": "/(.*)",
       "dest": "src/index.js"
     }
-  ]
+  ],
+  "build": {
+    "env": {
+      "PNPM_VERSION": "10.11.0"
+    }
+  }
 } 
