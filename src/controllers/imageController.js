@@ -1,5 +1,8 @@
 import { ImageService } from '../services/imageService.js';
 
+// 중복 요청 필터링 시간(초)
+const DUPLICATE_FILTER_SECONDS = 3;
+
 export class ImageController {
   static async uploadImage(req, res) {
     try {
@@ -50,52 +53,6 @@ export class ImageController {
         return res.status(400).json({ error: error.message });
       }
       res.status(500).json({ error: '단축 URL 생성 중 오류가 발생했습니다.' });
-    }
-  }
-
-  static async trackImage(req, res) {
-    try {
-      console.log('이미지 추적 요청:', {
-        image_url: req.query.image_url,
-        ip: req.headers['x-forwarded-for'] || req.ip,
-        userAgent: req.headers['user-agent'],
-        referrer: req.headers.referer
-      });
-
-      const { image_url } = req.query;
-      const ip = req.headers['x-forwarded-for'] || req.ip || 'unknown';
-      const userAgent = req.headers['user-agent'] || 'unknown';
-      const referrer = req.headers.referer || 'direct';
-
-      const { buffer, contentType } = await ImageService.trackImageView(
-        image_url,
-        ip,
-        userAgent,
-        referrer
-      );
-
-      console.log('이미지 추적 성공:', {
-        image_url,
-        contentType,
-        size: buffer.byteLength
-      });
-
-      res.set({
-        'Content-Type': contentType,
-        'Content-Length': buffer.byteLength,
-        'Cache-Control': 'public, max-age=31536000',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      });
-
-      res.send(Buffer.from(buffer));
-    } catch (error) {
-      console.error('이미지 추적 오류:', error);
-      if (error.message === '유효한 image_url이 필요합니다') {
-        return res.status(400).json({ error: error.message });
-      }
-      res.status(500).json({ error: '이미지 추적 중 오류가 발생했습니다.' });
     }
   }
 

@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { ImageController } from '../controllers/imageController.js';
+import { TrackController } from '../controllers/trackController.js';
 
 const router = express.Router();
 
@@ -14,13 +15,13 @@ const upload = multer({
 });
 
 // 이미지 업로드
-router.post('/upload', upload.single('file'), ImageController.uploadImage);
+router.post('/upload', upload.single('image'), ImageController.uploadImage);
 
 // 단축 URL 생성
 router.post('/shorten', ImageController.createShortUrl);
 
 // 이미지 추적
-router.get('/track', ImageController.trackImage);
+router.get('/track', TrackController.trackImage);
 
 // 단축 URL 처리
 router.get('/:shortId', ImageController.handleShortUrl);
