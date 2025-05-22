@@ -21,7 +21,7 @@ router.post('/upload', upload.single('file'), ImageController.uploadImage);
 router.post('/shorten', ImageController.createShortUrl);
 
 // 이미지 추적
-router.get('/track', TrackController.trackImage);
+router.get('/track/:short_id', TrackController.trackImage);
 
 // 단축 URL 처리
 router.get('/:shortId', ImageController.handleShortUrl);

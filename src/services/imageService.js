@@ -74,6 +74,20 @@ export class ImageService {
 
     const timestamp = new Date().toISOString();
 
+    // 우리 페이지에서의 접근인지 확인
+    const isInternalAccess = referrer?.includes('img-rust-eight.vercel.app');
+    if (isInternalAccess) {
+      // 내부 접근은 이미지만 반환
+      const imageResponse = await fetch(imageUrl);
+      if (!imageResponse.ok) {
+        throw new Error('이미지를 가져오는데 실패했습니다');
+      }
+      return {
+        buffer: await imageResponse.arrayBuffer(),
+        contentType: imageResponse.headers.get('Content-Type') || 'image/jpeg'
+      };
+    }
+
     // 최근 DUPLICATE_FILTER_SECONDS초 이내의 동일 요청자 확인
     const earliestValidTime = new Date();
     earliestValidTime.setSeconds(earliestValidTime.getSeconds() - DUPLICATE_FILTER_SECONDS);
@@ -92,27 +106,6 @@ export class ImageService {
 
     // 중복 요청이 아닌 경우에만 처리
     if (!recentAccess || recentAccess.length === 0) {
-      // 현재 카운트 조회
-      const { data: currentData } = await serviceSupabase
-        .from('image_access_logs')
-        .select('access_count')
-        .eq('image_url', imageUrl)
-        .single();
-
-      const currentCount = currentData?.access_count || 0;
-      
-      // 카운트 업데이트
-      await serviceSupabase
-        .from('image_access_logs')
-        .upsert(
-          {
-            image_url: imageUrl,
-            access_count: currentCount + 1,
-            updated_at: timestamp,
-          },
-          { onConflict: 'image_url' }
-        );
-
       // 상세 접근 기록 저장
       await serviceSupabase
         .from('image_access_history')

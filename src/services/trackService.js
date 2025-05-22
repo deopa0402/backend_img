@@ -55,7 +55,7 @@ export class TrackService {
         .upsert(
           {
             image_url,
-            access_count: currentCount + 1,
+            // access_count: currentCount + 1,
             updated_at: timestamp,
           },
           { onConflict: 'image_url' }
