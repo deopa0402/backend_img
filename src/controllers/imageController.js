@@ -1,4 +1,5 @@
 import { ImageService } from '../services/imageService.js';
+import { TrackService } from '../services/trackService.js';
 
 // 중복 요청 필터링 시간(초)
 const DUPLICATE_FILTER_SECONDS = 3;
@@ -70,8 +71,34 @@ export class ImageController {
         originalUrl
       });
 
-      const trackImageUrl = `/api/track?image_url=${encodeURIComponent(originalUrl)}`;
-      res.redirect(trackImageUrl);
+      // 이미지 가져오기 및 반환
+      const { imageData, contentType } = await TrackService.fetchImage(originalUrl);
+      
+      // 접근 정보 수집
+      const ip = req.headers['x-forwarded-for'] || req.ip || 'unknown';
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const referrer = req.headers.referer || 'direct';
+      const timestamp = new Date().toISOString();
+
+      // 중복 요청 확인 및 접근 기록 저장
+      const isDuplicate = await TrackService.checkDuplicateAccess(originalUrl, ip, userAgent, referrer);
+      
+      if (!isDuplicate) {
+        // 접근 카운트 업데이트
+        await TrackService.updateAccessCount(originalUrl, timestamp);
+        
+        // 상세 접근 기록 저장
+        await TrackService.saveAccessHistory(originalUrl, ip, userAgent, referrer, timestamp);
+      }
+
+      res.set({
+        'Content-Type': contentType,
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+
+      res.send(Buffer.from(imageData));
     } catch (error) {
       console.error('단축 URL 처리 오류:', error);
       res.status(404).json({ error: '이미지를 찾을 수 없습니다.' });
